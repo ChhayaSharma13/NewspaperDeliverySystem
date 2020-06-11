@@ -1,0 +1,33 @@
+image: openjdk:8
+
+pipelines:
+  default:
+    - step:
+        caches:
+          - gradle
+        script: 
+          - bash Newspaper/scripts/build-projects.sh
+        services:
+          - mysql
+          
+  branches:
+       master:
+         - step:
+             name: Time to Deploy
+             deployment: production
+             script:
+               - bash Newspaper/scripts/build-projects.sh
+               - curl -X POST --user "$BB_AUTH_STRING" "https://api.bitbucket.org/2.0/repositories/$BITBUCKET_REPO_OWNER/$BITBUCKET_REPO_SLUG/downloads" --form files=@"Newspaper/bin/Newspaper.jar"
+
+definitions:
+  services:
+   mysql:
+     image: mysql:5.7
+     environment:
+       MYSQL_DATABASE: pipeliness
+       MYSQL_ROOT_PASSWORD: admin
+       MYSQL_USER: test_user
+       MYSQL_PASSWORD: test_user_password
+       
+ 
+          
